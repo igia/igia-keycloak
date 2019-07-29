@@ -1,0 +1,29 @@
+<!--
+
+    This Source Code Form is subject to the terms of the Mozilla Public License, v.
+    2.0 with a Healthcare Disclaimer.
+    A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+    be found under the top level directory, named LICENSE.
+    If a copy of the MPL was not distributed with this file, You can obtain one at
+    http://mozilla.org/MPL/2.0/.
+    If a copy of the Healthcare Disclaimer was not distributed with this file, You
+    can obtain one at the project website https://github.com/igia.
+
+    Copyright (C) 2018-2019 Persistent Systems, Inc.
+
+-->
+<jboss-deployment-structure>
+    <deployment>
+        <dependencies>
+            <module name="com.fasterxml.jackson.core.jackson-annotations" />            
+            <module name="com.fasterxml.jackson.core.jackson-core" />            
+            <module name="com.fasterxml.jackson.core.jackson-databind" />  
+            <module name="org.keycloak.keycloak-common"/>
+            <module name="org.keycloak.keycloak-core"/>
+            <module name="org.keycloak.keycloak-server-spi"/>
+            <module name="org.keycloak.keycloak-server-spi-private"/>
+			<module name="org.keycloak.keycloak-services"/>    
+			<module name="org.jboss.logging" export="true" />
+        </dependencies>
+    </deployment>
+</jboss-deployment-structure>
