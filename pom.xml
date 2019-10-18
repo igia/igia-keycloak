@@ -20,7 +20,7 @@
 	<artifactId>igia-keycloak</artifactId>
 	<packaging>jar</packaging>
 	<name>igia Keycloak SMART-on-FHIR support</name>
-	<version>0.3.0</version>
+	<version>0.3.2</version>
 
 	<properties>
         <java.version>1.8</java.version>
