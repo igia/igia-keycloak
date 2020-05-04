@@ -27,16 +27,16 @@ import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.provider.ProviderConfigProperty;
 import org.keycloak.provider.ServerInfoAwareProviderFactory;
 
-public class SmartLaunchContextAuthenticatorFactory implements AuthenticatorFactory, ConfigurableAuthenticatorFactory, ServerInfoAwareProviderFactory {		
+public class SmartLaunchContextAuthenticatorFactory implements AuthenticatorFactory, ConfigurableAuthenticatorFactory, ServerInfoAwareProviderFactory {
 	public static final String PROVIDER_ID = "smart-launch-context-authenticator";
 	private static final SmartLaunchContextAuthenticator SINGLETON = new SmartLaunchContextAuthenticator();
-	
+
     public static final String CONFIG_APPLICATION_ID = "application-id";
     public static final String CONFIG_EXTERNAL_SMART_LAUNCH_URL = "external-smart-launch-url";
     public static final String CONFIG_EXTERNAL_SMART_LAUNCH_SECRET_KEY = "external-smart-launch-secret-key";
     public static final String CONFIG_EXTERNAL_SMART_LAUNCH_CLIENT_ID = "external-smart-launch-client-id";
     public static final String CONFIG_EXTERNAL_SMART_LAUNCH_SUPPORTED_PARAMS = "external-smart-launch--supported-params";
-    
+
     public static final String QUERY_PARAM_APP_TOKEN = "app-token";
     public static final String INITIATED_BY_SMART_LAUNCH_EXT_APP = "INITIATED_BY_SMART_LAUNCH_EXT_APP";
 
@@ -51,10 +51,10 @@ public class SmartLaunchContextAuthenticatorFactory implements AuthenticatorFact
     }
 
     private static AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES = {
-            AuthenticationExecutionModel.Requirement.OPTIONAL,
+            AuthenticationExecutionModel.Requirement.CONDITIONAL,
             AuthenticationExecutionModel.Requirement.DISABLED
     };
-    
+
     @Override
     public AuthenticationExecutionModel.Requirement[] getRequirementChoices() {
         return REQUIREMENT_CHOICES;
@@ -79,20 +79,20 @@ public class SmartLaunchContextAuthenticatorFactory implements AuthenticatorFact
 
     static {
         ProviderConfigProperty property;
-        property = new ProviderConfigProperty(CONFIG_EXTERNAL_SMART_LAUNCH_URL, 
-        		"External SMART Launch URL", 
+        property = new ProviderConfigProperty(CONFIG_EXTERNAL_SMART_LAUNCH_URL,
+        		"External SMART Launch URL",
         		"External URL to redirect for user launch context selection. The launch URL must include a query parameter with value placeholder \"{TOKEN}\".",
         		ProviderConfigProperty.STRING_TYPE, null);
         configProperties.add(property);
-        property = new ProviderConfigProperty(CONFIG_EXTERNAL_SMART_LAUNCH_SECRET_KEY, 
+        property = new ProviderConfigProperty(CONFIG_EXTERNAL_SMART_LAUNCH_SECRET_KEY,
         		"External SMART Launch Secret Key", "HmacSHA256 secret key for smart launch external application.",
         		ProviderConfigProperty.STRING_TYPE, null);
         configProperties.add(property);
-        property = new ProviderConfigProperty(CONFIG_EXTERNAL_SMART_LAUNCH_CLIENT_ID, 
+        property = new ProviderConfigProperty(CONFIG_EXTERNAL_SMART_LAUNCH_CLIENT_ID,
         		"External SMART Launch Client Id", "Client Id for smart launch external application.",
         		ProviderConfigProperty.STRING_TYPE, null);
         configProperties.add(property);
-        property = new ProviderConfigProperty(CONFIG_EXTERNAL_SMART_LAUNCH_SUPPORTED_PARAMS, 
+        property = new ProviderConfigProperty(CONFIG_EXTERNAL_SMART_LAUNCH_SUPPORTED_PARAMS,
         		"External SMART Launch Supported Params", "Space separated list of Smart launch context parameters supported by external application.",
         		ProviderConfigProperty.STRING_TYPE, null);
         configProperties.add(property);
@@ -131,7 +131,7 @@ public class SmartLaunchContextAuthenticatorFactory implements AuthenticatorFact
 	@Override
 	public Map<String, String> getOperationalInfo() {
 		Map<String, String> ret = new LinkedHashMap<>();
-        ret.put("version", "1.0");        
+        ret.put("version", "1.0");
         return ret;
 	}
 }
