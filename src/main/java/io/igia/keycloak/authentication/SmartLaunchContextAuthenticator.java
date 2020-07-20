@@ -85,21 +85,24 @@ public class SmartLaunchContextAuthenticator implements Authenticator {
 
 		logger.debugf("Requested scope: %s", scope);
 
-		List<String> scopes = Arrays.stream(scope.split("\\s+")).collect(Collectors.toList());
+		List<String> scopes = Arrays.asList(scope.split("\\s+"));
+
 		String supportedParams = context.getAuthenticatorConfig().getConfig()
 			.get(SmartLaunchContextAuthenticatorFactory.CONFIG_EXTERNAL_SMART_LAUNCH_SUPPORTED_PARAMS);
+
 		if(supportedParams == null || supportedParams.isEmpty()) {
 			context.attempted();
 			return;
 		}
 
-		List<String> params = Arrays.stream(supportedParams.split("\\s+")).collect(Collectors.toList());
+		String[] params = supportedParams.split("\\s+");
 		boolean foundMatch = false;
 		for(String param: params) {
-			if(scopes.contains(LAUNCH_SCOPE_PREFIX + param) ||
-					defaultScopes.containsKey(LAUNCH_SCOPE_PREFIX + param)){
-				foundMatch = true;
-			}
+            if (scopes.contains(LAUNCH_SCOPE_PREFIX + param) ||
+                    defaultScopes.containsKey(LAUNCH_SCOPE_PREFIX + param)) {
+                foundMatch = true;
+                break;
+            }
 		}
 
 		if(!foundMatch) {
@@ -153,8 +156,7 @@ public class SmartLaunchContextAuthenticator implements Authenticator {
 					.build();
 			logger.debugf("Redirecting to %s", redirectUrl.replace("{TOKEN}", URLEncoder.encode(externalLaunchToken, StandardCharsets.UTF_8.toString())));
 			context.forceChallenge(challenge);
-			return;
-		} catch (UnsupportedEncodingException e) {
+        } catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -192,18 +194,14 @@ public class SmartLaunchContextAuthenticator implements Authenticator {
 
 		// check for valid signature
 		try {
-			isApplicationTokenValid(context);
-		} catch (VerificationException e) {
-			logger.error("Invalid external application token signature.", e);
-			context.failure(AuthenticationFlowError.INVALID_CLIENT_SESSION);
-			return;
-		} catch (IOException e) {
+			validateApplicationToken(context);
+		} catch (VerificationException | IOException e) {
 			logger.error("Invalid external application token signature.", e);
 			context.failure(AuthenticationFlowError.INVALID_CLIENT_SESSION);
 			return;
 		}
 
-		JsonWebToken appToken = null;
+        JsonWebToken appToken;
 		try {
 			appToken = TokenVerifier.create(appTokenString, JsonWebToken.class).getToken();
 		} catch (VerificationException e) {
@@ -213,19 +211,17 @@ public class SmartLaunchContextAuthenticator implements Authenticator {
 		}
 
 		// check for presence of required launch claims
-		if(!hasRequiredLaunchClaims(context, appToken)) {
+		if (!hasRequiredLaunchClaims(context, appToken)) {
 			context.failure(AuthenticationFlowError.INVALID_CLIENT_SESSION);
-			return;
-		}else {
+        }else {
 			//add launch context parameters to client session
 			for(Entry<String, Object> entry: appToken.getOtherClaims().entrySet()) {
 				context.getAuthenticationSession().setClientNote(LAUNCH_SCOPE_PREFIX + entry.getKey(),
 						entry.getValue().toString());
 			}
 			context.success();
-			return;
-		}
-	}
+        }
+    }
 
 	private static UriBuilder smartLaunchBuilder(URI baseUri, String authSessionId, String accessCode, String clientId, String tabId) {
 		return Urls.realmBase(baseUri).path("{realm}/protocol/" + SmartOIDCLoginProtocolFactory.LOGIN_PROTOCOL)
@@ -273,14 +269,13 @@ public class SmartLaunchContextAuthenticator implements Authenticator {
 
         try {
 			tokenManager.checkTokenValidForIntrospection(context.getSession(), context.getRealm(), accessToken);
-			String encodedToken = context.getSession().tokens().encode(accessToken);
-			return encodedToken;
+            return context.getSession().tokens().encode(accessToken);
 		} catch (OAuthErrorException e) {
 			return null;
 		}
 	}
 
-	private boolean isApplicationTokenValid(AuthenticationFlowContext context)
+	private void validateApplicationToken(AuthenticationFlowContext context)
 			throws VerificationException, IOException {
 		String appTokenString = context.getUriInfo().getQueryParameters()
 				.getFirst(SmartLaunchContextAuthenticatorFactory.QUERY_PARAM_APP_TOKEN);
@@ -289,8 +284,6 @@ public class SmartLaunchContextAuthenticator implements Authenticator {
 		SecretKeySpec hmacSecretKeySpec = new SecretKeySpec(Base64.decode(secret), HMAC_SHA1_ALGORITHM);
 
 		TokenVerifier.create(appTokenString, JsonWebToken.class).secretKey(hmacSecretKeySpec).verify();
-
-		return true;
 	}
 
 	private boolean hasRequiredLaunchClaims(AuthenticationFlowContext context, JsonWebToken appToken) {

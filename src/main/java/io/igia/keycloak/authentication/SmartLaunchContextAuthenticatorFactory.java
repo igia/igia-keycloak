@@ -31,7 +31,6 @@ public class SmartLaunchContextAuthenticatorFactory implements AuthenticatorFact
 	public static final String PROVIDER_ID = "smart-launch-context-authenticator";
 	private static final SmartLaunchContextAuthenticator SINGLETON = new SmartLaunchContextAuthenticator();
 
-    public static final String CONFIG_APPLICATION_ID = "application-id";
     public static final String CONFIG_EXTERNAL_SMART_LAUNCH_URL = "external-smart-launch-url";
     public static final String CONFIG_EXTERNAL_SMART_LAUNCH_SECRET_KEY = "external-smart-launch-secret-key";
     public static final String CONFIG_EXTERNAL_SMART_LAUNCH_CLIENT_ID = "external-smart-launch-client-id";
@@ -50,7 +49,7 @@ public class SmartLaunchContextAuthenticatorFactory implements AuthenticatorFact
         return SINGLETON;
     }
 
-    private static AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES = {
+    private static final AuthenticationExecutionModel.Requirement[] REQUIREMENT_CHOICES = {
             AuthenticationExecutionModel.Requirement.CONDITIONAL,
             AuthenticationExecutionModel.Requirement.DISABLED
     };
