@@ -12,6 +12,8 @@
  */
 package io.igia.keycloak.authentication;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -78,42 +80,41 @@ public class SmartLaunchContextAuthenticatorTest {
 	private UserSessionModel userSessionModel;
 	private AuthenticatedClientSessionModel launchClientSessionModel;
 	private ClientModel launchClientModel;
-	private KeycloakUriInfo uriInfo;		
+	private KeycloakUriInfo uriInfo;
 	private TokenManager tokenManager;
 	private AuthenticationExecutionModel executionModel;
-	private Map<String, ClientScopeModel> defaultClientScopes; 
-	private Map<String, ClientScopeModel> defaultLaunchClientScopes; 
+	private Map<String, ClientScopeModel> defaultClientScopes;
+	private Map<String, ClientScopeModel> defaultLaunchClientScopes;
 	private Map<String, String> authenticatorConfig;
-	
+
 	private Response response;
 	private Boolean attempted;
 
 	@Test
-	public void testAuthenticate() throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {		
-		setupDefaultMocks();	
-		
-		SmartLaunchContextAuthenticator authenticator = new SmartLaunchContextAuthenticator();
-		authenticator.authenticate(context);	
-		
-		assertTrue("Challenge response not null.", response != null);
-		assertTrue("Location header exists.", 
-				response.getMetadata().get("Location").get(0) != null);				
+	public void testAuthenticate() throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {
+		setupDefaultMocks();
 
-		String location = response.getMetadata().get("Location").get(0).toString();		
-		URI uri = new URI(location);		
+		SmartLaunchContextAuthenticator authenticator = new SmartLaunchContextAuthenticator();
+		authenticator.authenticate(context);
+
+        assertNotNull("Challenge response not null.", response);
+        assertNotNull("Location header exists.", response.getMetadata().get("Location").get(0));
+
+		String location = response.getMetadata().get("Location").get(0).toString();
+		URI uri = new URI(location);
 		assertTrue("Location host matches expected.", uri.getHost().equalsIgnoreCase("externallaunch.com"));
-		
+
 		List<NameValuePair> params = URLEncodedUtils.parse(uri, Charset.forName("UTF-8"));
-				
+
 		String aud = getQueryValue("aud", params);
-		assertTrue("Location contains aud query param.", aud != null);
-		assertTrue("Aud query param expected value.", aud.equals("http://fhirserver.org"));
+        assertNotNull("Location contains aud query param.", aud);
+        assertEquals("Aud query param expected value.", "http://fhirserver.org", aud);
 		String access_token = getQueryValue("access_token", params);
-		assertTrue("Location contains access token query param.", access_token != null);
-		assertTrue("Access token query param expected value.", access_token.equals("encodedtoken"));
-		
+        assertNotNull("Location contains access token query param.", access_token);
+        assertEquals("Access token query param expected value.", "encodedtoken", access_token);
+
 		String token = getQueryValue("token", params);
-		assertTrue("Location contains token query param.", token != null);
+        assertNotNull("Location contains token query param.", token);
 		assertTrue("Token query param host and path as expected.", token.startsWith("http://keycloak/realms/realmName/protocol/smart-openid-connect/smart-launch-context?"));
 		assertTrue("Token query param contains session_code.", token.contains("session_code"));
 		assertTrue("Token query param contains client_id.", token.contains("client_id=clientId"));
@@ -122,59 +123,59 @@ public class SmartLaunchContextAuthenticatorTest {
 		assertTrue("Token query param contains execution.", token.contains("execution=executionId"));
 		assertTrue("Token query param contains app-token.", token.contains("app-token=%7BAPP_TOKEN%7D"));
 	}
-	
+
 	@Test
-	public void testAuthenticateScopeNoMatch() throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {		
+	public void testAuthenticateScopeNoMatch() throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {
 		setupDefaultMocks();
 		//override mocks
 		Mockito.when(sessionModel.getClientNote(OIDCLoginProtocol.SCOPE_PARAM)).thenReturn("launch/encounter");
-		
+
 		SmartLaunchContextAuthenticator authenticator = new SmartLaunchContextAuthenticator();
-		authenticator.authenticate(context);	
-		
+		authenticator.authenticate(context);
+
 		assertTrue("Context attempted.", attempted);
 	}
-	
+
 	@Test
-	public void testAuthenticateDefaultScopeMatch() throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {		
+	public void testAuthenticateDefaultScopeMatch() throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {
 		setupDefaultMocks();
 		//override mocks
 		Mockito.when(sessionModel.getClientNote(OIDCLoginProtocol.SCOPE_PARAM)).thenReturn("launch/encounter");
 		defaultClientScopes.put("launch/patient", Mockito.mock(ClientScopeModel.class));
 		Mockito.when(clientModel.getClientScopes(true, true)).thenReturn(defaultClientScopes);
-		
+
 		SmartLaunchContextAuthenticator authenticator = new SmartLaunchContextAuthenticator();
-		authenticator.authenticate(context);	
-		
-		assertTrue("Challenge response not null.", response != null);
+		authenticator.authenticate(context);
+
+        assertNotNull("Challenge response not null.", response);
 	}
-	
+
 	@Test
-	public void testAuthenticateSupportedConfigNull() throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {		
+	public void testAuthenticateSupportedConfigNull() throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {
 		setupDefaultMocks();
 		//override mocks
-		authenticatorConfig.put(SmartLaunchContextAuthenticatorFactory.CONFIG_EXTERNAL_SMART_LAUNCH_SUPPORTED_PARAMS, 
+		authenticatorConfig.put(SmartLaunchContextAuthenticatorFactory.CONFIG_EXTERNAL_SMART_LAUNCH_SUPPORTED_PARAMS,
 				null);
 
 		SmartLaunchContextAuthenticator authenticator = new SmartLaunchContextAuthenticator();
-		authenticator.authenticate(context);	
-		
+		authenticator.authenticate(context);
+
 		assertTrue("Context attempted.", attempted);
 	}
-	
+
 	@Test
-	public void testAuthenticateSupportedConfigEmpty() throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {		
+	public void testAuthenticateSupportedConfigEmpty() throws UnsupportedEncodingException, MalformedURLException, URISyntaxException {
 		setupDefaultMocks();
 		//override mocks
-		authenticatorConfig.put(SmartLaunchContextAuthenticatorFactory.CONFIG_EXTERNAL_SMART_LAUNCH_SUPPORTED_PARAMS, 
+		authenticatorConfig.put(SmartLaunchContextAuthenticatorFactory.CONFIG_EXTERNAL_SMART_LAUNCH_SUPPORTED_PARAMS,
 				"");
 
 		SmartLaunchContextAuthenticator authenticator = new SmartLaunchContextAuthenticator();
-		authenticator.authenticate(context);	
-		
+		authenticator.authenticate(context);
+
 		assertTrue("Context attempted.", attempted);
 	}
-	
+
 	private void setupDefaultMocks() {
 		context = Mockito.mock(AuthenticationFlowContext.class);
 		sessionModel = Mockito.mock(AuthenticationSessionModel.class);
@@ -190,29 +191,29 @@ public class SmartLaunchContextAuthenticatorTest {
 		userSessionModel = Mockito.mock(UserSessionModel.class);
 		launchClientSessionModel = Mockito.mock(AuthenticatedClientSessionModel.class);
 		launchClientModel = Mockito.mock(ClientModel.class);
-		uriInfo = Mockito.mock(KeycloakUriInfo.class);		
+		uriInfo = Mockito.mock(KeycloakUriInfo.class);
 		tokenManager = Mockito.mock(TokenManager.class);
 		executionModel = Mockito.mock(AuthenticationExecutionModel.class);
 		defaultClientScopes = new HashMap<String, ClientScopeModel>();
 		defaultLaunchClientScopes = new HashMap<String, ClientScopeModel>();
 		authenticatorConfig = new HashMap<String, String>();
-			
+
 		// keycloak context
 		Mockito.when(session.getContext()).thenReturn(keycloakContext);
 		Mockito.when(keycloakContext.getUri()).thenReturn(uriInfo);
 //		Mockito.when(keycloakContext.getRealm()).thenReturn(realm);
 		Mockito.when(session.sessions()).thenReturn(userSessionProvider);
-		Mockito.when(session.tokens()).thenReturn(tokenManager);		
+		Mockito.when(session.tokens()).thenReturn(tokenManager);
 		Mockito.when(tokenManager.encode(any())).thenReturn("encodedtoken");
 		// realm
-		Mockito.when(realm.getName()).thenReturn("realmName");	
+		Mockito.when(realm.getName()).thenReturn("realmName");
 		//auth context
 		Mockito.when(context.getRealm()).thenReturn(realm);
 		Mockito.when(context.getSession()).thenReturn(session);
 		Mockito.when(context.getAuthenticationSession()).thenReturn(sessionModel);
 		Mockito.when(context.getUser()).thenReturn(userModel);
 		Mockito.when(context.getConnection()).thenReturn(clientConnection);
-		Mockito.when(clientConnection.getRemoteAddr()).thenReturn("remoteAddr");	
+		Mockito.when(clientConnection.getRemoteAddr()).thenReturn("remoteAddr");
 		Mockito.when(context.getAuthenticatorConfig()).thenReturn(authenticatorConfigModel);
 		Mockito.when(authenticatorConfigModel.getConfig()).thenReturn(authenticatorConfig);
 		Mockito.when(context.getUriInfo()).thenReturn(uriInfo);
@@ -222,18 +223,17 @@ public class SmartLaunchContextAuthenticatorTest {
 		// auth session
 		Mockito.when(sessionModel.getParentSession()).thenReturn(rootSession);
 		Mockito.when(rootSession.getId()).thenReturn("rootSessionId");
-		Mockito.doNothing().when(rootSession).setTimestamp(anyInt());		
-		Mockito.when(sessionModel.getAuthenticatedUser()).thenReturn(userModel);	
-		Mockito.when(sessionModel.getClientNote(OIDCLoginProtocol.SCOPE_PARAM)).thenReturn("launch/patient");	
+		Mockito.doNothing().when(rootSession).setTimestamp(anyInt());
+		Mockito.when(sessionModel.getAuthenticatedUser()).thenReturn(userModel);
+		Mockito.when(sessionModel.getClientNote(OIDCLoginProtocol.SCOPE_PARAM)).thenReturn("launch/patient");
 		Mockito.when(sessionModel.getClientNote(AuthorizationEndpoint.LOGIN_SESSION_NOTE_ADDITIONAL_REQ_PARAMS_PREFIX + "aud"))
-				.thenReturn("http://fhirserver.org");	
+				.thenReturn("http://fhirserver.org");
 		Mockito.when(sessionModel.getClient()).thenReturn(clientModel);
 		Mockito.when(sessionModel.getTabId()).thenReturn("tabId");
 		// user
 		Mockito.when(userModel.getUsername()).thenReturn("userName");
-		Mockito.when(userModel.getId()).thenReturn("userId");					
+		Mockito.when(userModel.getId()).thenReturn("userId");
 		// user session
-		Mockito.when(userSessionModel.getUser()).thenReturn(userModel);
 		Mockito.when(userSessionModel.getNote(AuthenticationManager.AUTH_TIME)).thenReturn("1234567890");
 		Mockito.when(userSessionProvider.createUserSession(anyString(), any(), any(), anyString(), anyString(), anyString(), eq(false), isNull(), isNull()))
 			.thenReturn(userSessionModel);
@@ -241,23 +241,21 @@ public class SmartLaunchContextAuthenticatorTest {
 		Mockito.when(clientModel.getClientScopes(true, true)).thenReturn(defaultClientScopes);
 		Mockito.when(clientModel.getClientId()).thenReturn("clientId");
 		// launch client
-		Mockito.when(launchClientModel.getClientScopes(true, true)).thenReturn(defaultLaunchClientScopes);		
-		Mockito.when(launchClientModel.isFullScopeAllowed()).thenReturn(false);	
+		Mockito.when(launchClientModel.getClientScopes(true, true)).thenReturn(defaultLaunchClientScopes);
 		Mockito.when(launchClientModel.getClientId()).thenReturn("launchClientid");
-		Mockito.when(realm.getClientByClientId("launchClientid")).thenReturn(launchClientModel);	
+		Mockito.when(realm.getClientByClientId("launchClientid")).thenReturn(launchClientModel);
 		// launch client session
 		Mockito.when(launchClientSessionModel.getClient()).thenReturn(launchClientModel);
-		Mockito.when(launchClientSessionModel.getUserSession()).thenReturn(userSessionModel);			
 		Mockito.when(userSessionProvider.createClientSession(any(), any(), any())).thenReturn(launchClientSessionModel);
-		
+
 		// authenticator configuration
-		authenticatorConfig.put(SmartLaunchContextAuthenticatorFactory.CONFIG_EXTERNAL_SMART_LAUNCH_SUPPORTED_PARAMS, 
+		authenticatorConfig.put(SmartLaunchContextAuthenticatorFactory.CONFIG_EXTERNAL_SMART_LAUNCH_SUPPORTED_PARAMS,
 				"patient");
 		authenticatorConfig.put(SmartLaunchContextAuthenticatorFactory.CONFIG_EXTERNAL_SMART_LAUNCH_URL,
 				"http://externallaunch.com?token={TOKEN}");
 		authenticatorConfig.put(SmartLaunchContextAuthenticatorFactory.CONFIG_EXTERNAL_SMART_LAUNCH_CLIENT_ID,
-				"launchClientid");		
-		
+				"launchClientid");
+
 		// capture challenge response
 		response = null;
 		Mockito.doAnswer(new Answer<Object>() {
@@ -267,7 +265,7 @@ public class SmartLaunchContextAuthenticatorTest {
 		        return null;
 		    }
 		}).when(context).forceChallenge(any());
-		
+
 		// capture attempted
 		attempted = false;
 		Mockito.doAnswer(new Answer<Object>() {
@@ -278,7 +276,7 @@ public class SmartLaunchContextAuthenticatorTest {
 		    }
 		}).when(context).attempted();
 	}
-	
+
 	private String getQueryValue(String key, List<NameValuePair> params) {
 		for (NameValuePair param : params) {
 			if(param.getName().equals(key)) {

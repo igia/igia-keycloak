@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.keycloak.models.AuthenticatedClientSessionModel;
+import org.keycloak.models.ClientSessionContext;
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.ProtocolMapperModel;
 import org.keycloak.models.UserSessionModel;
@@ -77,47 +78,13 @@ public class ClientSessionNoteMapper extends AbstractOIDCProtocolMapper implemen
 		return "Map a custom client session note to a token claim.";
 	}
 
-	@Override
-	public AccessToken transformUserInfoToken(AccessToken token, ProtocolMapperModel mappingModel, KeycloakSession session,
-			UserSessionModel userSession, AuthenticatedClientSessionModel clientSession) {
-
-		if (!OIDCAttributeMapperHelper.includeInUserInfo(mappingModel)) {
-			return token;
-		}
-
-		setClaim(token, mappingModel, userSession, session, clientSession);
-		return token;
-	}
 
 	@Override
-	public AccessToken transformAccessToken(AccessToken token, ProtocolMapperModel mappingModel, KeycloakSession session,
-			UserSessionModel userSession, AuthenticatedClientSessionModel clientSession) {
-
-		if (!OIDCAttributeMapperHelper.includeInAccessToken(mappingModel)){
-			return token;
-		}
-
-		setClaim(token, mappingModel, userSession, session, clientSession);
-		return token;
-	}
-
-	@Override
-	public IDToken transformIDToken(IDToken token, ProtocolMapperModel mappingModel, KeycloakSession session,
-			UserSessionModel userSession, AuthenticatedClientSessionModel clientSession) {
-
-		if (!OIDCAttributeMapperHelper.includeInIDToken(mappingModel)){
-			return token;
-		}
-
-		setClaim(token, mappingModel, userSession, session, clientSession);
-		return token;
-	}
-		
 	protected void setClaim(IDToken token, ProtocolMapperModel mappingModel, UserSessionModel userSession,
-			KeycloakSession session, AuthenticatedClientSessionModel clientSession) {
+			KeycloakSession session, ClientSessionContext clientSessionCtx) {
 
 		String noteName = mappingModel.getConfig().get(CLIENT_SESSION_NOTE);
-		String noteValue = clientSession.getNote(noteName);
+		String noteValue = clientSessionCtx.getClientSession().getNote(noteName);
 		if (noteValue == null) return;
 		OIDCAttributeMapperHelper.mapClaim(token, mappingModel, noteValue);
 	}
@@ -143,7 +110,7 @@ public class ClientSessionNoteMapper extends AbstractOIDCProtocolMapper implemen
 	@Override
 	public Map<String, String> getOperationalInfo() {
 		Map<String, String> ret = new LinkedHashMap<>();
-        ret.put("version", "1.0");        
+        ret.put("version", "1.0");
         return ret;
 	}
 }

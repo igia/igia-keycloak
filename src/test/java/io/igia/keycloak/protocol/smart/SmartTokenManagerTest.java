@@ -12,6 +12,8 @@
  */
 package io.igia.keycloak.protocol.smart;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.HashMap;
@@ -45,22 +47,22 @@ public class SmartTokenManagerTest {
 		UserSessionModel userSession = Mockito.mock(UserSessionModel.class);
 		ClientSessionContext clientSessionCtx = Mockito.mock(ClientSessionContext.class);
 		AuthenticatedClientSessionModel authenticatedClientSessionModel = Mockito.mock(AuthenticatedClientSessionModel.class);
-		
+
 		SmartTokenManager smartTokenManager = Mockito.spy(new SmartTokenManager());
 		SmartAccessTokenResponseBuilder spy = Mockito.spy(
-				smartTokenManager.new SmartAccessTokenResponseBuilder(realm, client, event, session, userSession, clientSessionCtx));	
-		
+				smartTokenManager.new SmartAccessTokenResponseBuilder(realm, client, event, session, userSession, clientSessionCtx));
+
 		Map<String, String> notes = new HashMap<String, String>();
 		notes.put(SmartLaunchContextAuthenticator.LAUNCH_SCOPE_PREFIX + "note1", "note1value");
 		notes.put(SmartLaunchContextAuthenticator.LAUNCH_SCOPE_PREFIX + "note2", "note2value");
-		
+
 		Mockito.doReturn(new AccessTokenResponse()).when(spy).buildAccessTokenResponse();
 		Mockito.when(clientSessionCtx.getClientSession()).thenReturn(authenticatedClientSessionModel);
 		Mockito.when(authenticatedClientSessionModel.getNotes()).thenReturn(notes);
-		
+
 		AccessTokenResponse res = spy.build();
-		assertTrue("AccessTokenResponse contains note1 correct value", res.getOtherClaims().get("note1").equals("note1value"));
-		assertTrue("AccessTokenResponse contains note2 correct value", res.getOtherClaims().get("note2").equals("note2value"));
+        assertEquals("AccessTokenResponse contains note1 correct value", "note1value", res.getOtherClaims().get("note1"));
+        assertEquals("AccessTokenResponse contains note2 correct value", "note2value", res.getOtherClaims().get("note2"));
 	}
 
 	@Test
@@ -72,22 +74,22 @@ public class SmartTokenManagerTest {
 		UserSessionModel userSession = Mockito.mock(UserSessionModel.class);
 		ClientSessionContext clientSessionCtx = Mockito.mock(ClientSessionContext.class);
 		AuthenticatedClientSessionModel authenticatedClientSessionModel = Mockito.mock(AuthenticatedClientSessionModel.class);
-		
+
 		SmartTokenManager smartTokenManager = Mockito.spy(new SmartTokenManager());
 		SmartAccessTokenResponseBuilder spy = Mockito.spy(
-				smartTokenManager.new SmartAccessTokenResponseBuilder(realm, client, event, session, userSession, clientSessionCtx));	
-		
+				smartTokenManager.new SmartAccessTokenResponseBuilder(realm, client, event, session, userSession, clientSessionCtx));
+
 		Map<String, String> notes = new HashMap<String, String>();
-		notes.put(SmartLaunchContextAuthenticator.LAUNCH_SCOPE_PREFIX + "note1", "");		
-		
+		notes.put(SmartLaunchContextAuthenticator.LAUNCH_SCOPE_PREFIX + "note1", "");
+
 		Mockito.doReturn(new AccessTokenResponse()).when(spy).buildAccessTokenResponse();
 		Mockito.when(clientSessionCtx.getClientSession()).thenReturn(authenticatedClientSessionModel);
 		Mockito.when(authenticatedClientSessionModel.getNotes()).thenReturn(notes);
-		
+
 		AccessTokenResponse res = spy.build();
-		assertTrue("AccessTokenResponse does not contain empty claim value", res.getOtherClaims().get("note1") == null);
+        assertNull("AccessTokenResponse does not contain empty claim value", res.getOtherClaims().get("note1"));
 	}
-	
+
 	@Test
 	public void testBuildNullNote() {
 		RealmModel realm = Mockito.mock(RealmModel.class);
@@ -97,19 +99,19 @@ public class SmartTokenManagerTest {
 		UserSessionModel userSession = Mockito.mock(UserSessionModel.class);
 		ClientSessionContext clientSessionCtx = Mockito.mock(ClientSessionContext.class);
 		AuthenticatedClientSessionModel authenticatedClientSessionModel = Mockito.mock(AuthenticatedClientSessionModel.class);
-		
+
 		SmartTokenManager smartTokenManager = Mockito.spy(new SmartTokenManager());
 		SmartAccessTokenResponseBuilder spy = Mockito.spy(
-				smartTokenManager.new SmartAccessTokenResponseBuilder(realm, client, event, session, userSession, clientSessionCtx));	
-		
+				smartTokenManager.new SmartAccessTokenResponseBuilder(realm, client, event, session, userSession, clientSessionCtx));
+
 		Map<String, String> notes = new HashMap<String, String>();
-		notes.put(SmartLaunchContextAuthenticator.LAUNCH_SCOPE_PREFIX + "note1", null);		
-		
+		notes.put(SmartLaunchContextAuthenticator.LAUNCH_SCOPE_PREFIX + "note1", null);
+
 		Mockito.doReturn(new AccessTokenResponse()).when(spy).buildAccessTokenResponse();
 		Mockito.when(clientSessionCtx.getClientSession()).thenReturn(authenticatedClientSessionModel);
 		Mockito.when(authenticatedClientSessionModel.getNotes()).thenReturn(notes);
-		
+
 		AccessTokenResponse res = spy.build();
-		assertTrue("AccessTokenResponse does not contain null claim value", res.getOtherClaims().get("note1") == null);
+        assertNull("AccessTokenResponse does not contain null claim value", res.getOtherClaims().get("note1"));
 	}
 }
